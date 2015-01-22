@@ -3,13 +3,14 @@ package main
 
 import (
 	"flag"
-	"github.com/HouzuoGuo/tiedot/httpapi"
-	"github.com/HouzuoGuo/tiedot/tdlog"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
+
+	"github.com/tiedot/api/httpapi"
+	"github.com/tiedot/core/tdlog"
 )
 
 func main() {
