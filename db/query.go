@@ -253,7 +253,7 @@ func IntRange(intFrom interface{}, expr map[string]interface{}, src *Col, result
 	if from < to {
 		// Forward scan - from low value to high value
 		for lookupValue := from; lookupValue <= to; lookupValue++ {
-			hashValue := StrHash(strconv.Itoa(lookupValue))
+			hashValue := StrHash(fmt.Sprint(float64(lookupValue)))
 			vals := src.hashScan(htPath, hashValue, intLimit)
 			for _, docID := range vals {
 				if intLimit > 0 && counter == intLimit {
@@ -266,7 +266,7 @@ func IntRange(intFrom interface{}, expr map[string]interface{}, src *Col, result
 	} else {
 		// Backward scan - from high value to low value
 		for lookupValue := from; lookupValue >= to; lookupValue-- {
-			hashValue := StrHash(strconv.Itoa(lookupValue))
+			hashValue := StrHash(fmt.Sprint(float64(lookupValue)))
 			vals := src.hashScan(htPath, hashValue, intLimit)
 			for _, docID := range vals {
 				if intLimit > 0 && counter == intLimit {
