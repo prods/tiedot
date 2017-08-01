@@ -65,9 +65,9 @@ func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind,
 	router := httprouter.New()
 
 	// These endpoints are always available and do not require authentication
-	router.GET("/", Welcome)
-	router.GET("/version", Version)
-	router.GET("/memstats", MemStats)
+	router.GET("/", StandardAPIResponder(Welcome))
+	router.GET("/version", StandardAPIResponder(Version))
+	router.GET("/memstats", StandardAPIResponder(MemStats))
 
 	// Install API endpoint handlers that may require authorization
 	var authWrap func(httprouter.Handle) httprouter.Handle
@@ -136,30 +136,30 @@ func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind,
 	}
 
 	// collection management (stop-the-world)
-	router.POST("/collection/:collection_name", authWrap(Create))
-	router.PUT("/collection/:collection_name/rename/:new_collection_name", authWrap(Rename))
-	router.DELETE("/collection/:collection_name", authWrap(Drop))
-	router.GET("/collections", authWrap(All))
-	router.POST("/collection/:collection_name/scrub", authWrap(Scrub))
-	router.POST("/sync", authWrap(Sync))
+	router.POST("/collection/:collection_name", authWrap(StandardAPIResponder(Create)))
+	router.PUT("/collection/:collection_name/rename/:new_collection_name", authWrap(StandardAPIResponder(Rename)))
+	router.DELETE("/collection/:collection_name", authWrap(StandardAPIResponder(Drop)))
+	router.GET("/collections", authWrap(StandardAPIResponder(All)))
+	router.POST("/collection/:collection_name/scrub", authWrap(StandardAPIResponder(Scrub)))
+	router.POST("/sync", authWrap(StandardAPIResponder(Sync)))
 	// query
-	router.POST("/collection/:collection_name/query", authWrap(Query))
-	router.POST("/collection/:collection_name/count", authWrap(Count))
+	router.POST("/collection/:collection_name/query", authWrap(StandardAPIResponder(Query)))
+	router.POST("/collection/:collection_name/count", authWrap(StandardAPIResponder(Count)))
 	// document management
-	router.POST("/collection/:collection_name/doc", authWrap(Insert))
-	router.GET("/collection/:collection_name/doc/:id", authWrap(Get))
-	router.PUT("/collection/:collection_name/doc/:id", authWrap(Update))
-	router.DELETE("/collection/:collection_name/doc/:id", authWrap(Delete))
-	router.GET("/collection/:collection_name/page/:page/of/:total", authWrap(GetPage))
+	router.POST("/collection/:collection_name/doc", authWrap(StandardAPIResponder(Insert)))
+	router.GET("/collection/:collection_name/doc/:id", authWrap(StandardAPIResponder(Get)))
+	router.PUT("/collection/:collection_name/doc/:id", authWrap(StandardAPIResponder(Update)))
+	router.DELETE("/collection/:collection_name/doc/:id", authWrap(StandardAPIResponder(Delete)))
+	router.GET("/collection/:collection_name/page/:page/of/:total", authWrap(StandardAPIResponder(GetPage)))
 	// TODO: Review if it will make more sense for it to be just /collection/:collection_name/count
-	router.GET("/collection/:collection_name/count/approx", authWrap(ApproxDocCount))
+	router.GET("/collection/:collection_name/count/approx", authWrap(StandardAPIResponder(ApproxDocCount)))
 	// index management (stop-the-world)
-	router.POST("/collection/:collection_name/index", authWrap(Index))
-	router.DELETE("/collection/:collection_name/index", authWrap(Unindex))
-	router.GET("/collection/:collection_name/indexes", authWrap(Indexes))
+	router.POST("/collection/:collection_name/index", authWrap(StandardAPIResponder(Index)))
+	router.DELETE("/collection/:collection_name/index", authWrap(StandardAPIResponder(Unindex)))
+	router.GET("/collection/:collection_name/indexes", authWrap(StandardAPIResponder(Indexes)))
 	// misc (stop-the-world)
-	router.POST("/shutdown", authWrap(Shutdown))
-	router.POST("/dump", authWrap(Dump))
+	router.POST("/shutdown", authWrap(StandardAPIResponder(Shutdown)))
+	router.POST("/dump", authWrap(StandardAPIResponder(Dump)))
 
 	iface := "all interfaces"
 	if bind != "" {

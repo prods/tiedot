@@ -5,9 +5,9 @@ package httpapi
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strings"
-	"github.com/julienschmidt/httprouter"
 )
 
 type IndexPath struct {
@@ -16,10 +16,6 @@ type IndexPath struct {
 
 // Put an index on a document path.
 func Index(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, path string
 
 	if IsNewAPIRoute(r) {
@@ -61,10 +57,6 @@ func Index(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Return all indexed paths.
 func Indexes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col string
 	if IsNewAPIRoute(r) {
 		col = p.ByName("collection_name")
@@ -93,10 +85,6 @@ func Indexes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Remove an indexed path.
 func Unindex(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, path string
 
 	if IsNewAPIRoute(r) {

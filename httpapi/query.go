@@ -14,10 +14,6 @@ import (
 
 // Execute a query and return documents from the result.
 func Query(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, q string
 	var qJson interface{}
 
@@ -78,10 +74,6 @@ func Query(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Execute a query and return number of documents from the result.
 func Count(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, q string
 	var qJson interface{}
 	if IsNewAPIRoute(r) {

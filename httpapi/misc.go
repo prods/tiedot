@@ -5,28 +5,20 @@ package httpapi
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"os"
 	"runtime"
-	"github.com/julienschmidt/httprouter"
 )
 
 // Flush and close all data files and shutdown the entire program.
 func Shutdown(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	HttpDB.Close()
 	os.Exit(0)
 }
 
 // Copy this database into destination directory.
 func Dump(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var dest string
 
 	if IsNewAPIRoute(r) {
@@ -60,10 +52,6 @@ func Dump(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Return server memory statistics.
 func MemStats(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	stats := new(runtime.MemStats)
 	runtime.ReadMemStats(stats)
 	resp, err := json.Marshal(stats)
@@ -76,9 +64,5 @@ func MemStats(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Return server protocol version number.
 func Version(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	w.Write([]byte("6"))
 }

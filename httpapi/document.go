@@ -5,17 +5,13 @@ package httpapi
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
-	"github.com/julienschmidt/httprouter"
 )
 
 // Insert a document into collection.
 func Insert(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, doc string
 	var jsonDoc map[string]interface{}
 
@@ -57,10 +53,6 @@ func Insert(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Find and retrieve a document by ID.
 func Get(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, id string
 
 	if IsNewAPIRoute(r) {
@@ -101,10 +93,6 @@ func Get(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Divide documents into roughly equally sized pages, and return documents in the specified page.
 func GetPage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, page, total string
 
 	if IsNewAPIRoute(r) {
@@ -156,10 +144,6 @@ func GetPage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Update a document.
 func Update(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, id, doc string
 	var newDoc map[string]interface{}
 
@@ -210,10 +194,6 @@ func Update(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Delete a document.
 func Delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, id string
 
 	if IsNewAPIRoute(r) {
@@ -243,10 +223,6 @@ func Delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 // Return approximate number of documents in the collection.
 func ApproxDocCount(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Set("Cache-Control", "must-revalidate")
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col string
 	if IsNewAPIRoute(r) {
 		col = p.ByName("collection_name")
