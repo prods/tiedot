@@ -7,20 +7,45 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"github.com/julienschmidt/httprouter"
 )
 
+type IndexPath struct {
+	Path string `json:"path"`
+}
+
 // Put an index on a document path.
-func Index(w http.ResponseWriter, r *http.Request) {
+func Index(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, path string
-	if !Require(w, r, "col", &col) {
-		return
-	}
-	if !Require(w, r, "path", &path) {
-		return
+
+	if IsNewAPIRoute(r) {
+		var jsonDoc IndexPath
+		col = p.ByName("collection_name")
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&jsonDoc)
+		if err != nil {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", jsonDoc), 400)
+			return
+		}
+		path = jsonDoc.Path
+		if path == "" {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, "No Index path was provided.", 400)
+			return
+		}
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
+		if !Require(w, r, "path", &path) {
+			return
+		}
 	}
 	dbcol := HttpDB.Use(col)
 	if dbcol == nil {
@@ -35,14 +60,19 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 // Return all indexed paths.
-func Indexes(w http.ResponseWriter, r *http.Request) {
+func Indexes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col string
-	if !Require(w, r, "col", &col) {
-		return
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
 	}
 	dbcol := HttpDB.Use(col)
 	if dbcol == nil {
@@ -62,17 +92,37 @@ func Indexes(w http.ResponseWriter, r *http.Request) {
 }
 
 // Remove an indexed path.
-func Unindex(w http.ResponseWriter, r *http.Request) {
+func Unindex(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, path string
-	if !Require(w, r, "col", &col) {
-		return
-	}
-	if !Require(w, r, "path", &path) {
-		return
+
+	if IsNewAPIRoute(r) {
+		var jsonDoc IndexPath
+		col = p.ByName("collection_name")
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&jsonDoc)
+		if err != nil {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", jsonDoc), 400)
+			return
+		}
+		path = jsonDoc.Path
+		if path == "" {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, "No Index path was provided.", 400)
+			return
+		}
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
+		if !Require(w, r, "path", &path) {
+			return
+		}
 	}
 	dbcol := HttpDB.Use(col)
 	if dbcol == nil {

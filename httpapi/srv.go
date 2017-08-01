@@ -26,11 +26,23 @@ import (
 	"github.com/HouzuoGuo/tiedot/db"
 	"github.com/HouzuoGuo/tiedot/tdlog"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/julienschmidt/httprouter"
+	"strings"
 )
 
 var (
 	HttpDB *db.DB // HTTP API endpoints operate on this database
 )
+
+// IsNewAPIRoute Determines if the provided Route is part of the new API.
+func IsNewAPIRoute(r *http.Request) bool {
+	// This is a temporary solution in order to reuse the original route handlers.
+	// It should be gone once the old API is deprecated.
+	return strings.HasPrefix(r.URL.Path, "/collection") ||
+		(r.Method == "POST" && (r.URL.Path == "/sync" ||
+			r.URL.Path == "/shutdown" ||
+			r.URL.Path == "/dump"))
+}
 
 // Store form parameter value of specified key to *val and return true; if key does not exist, set HTTP status 400 and return false.
 func Require(w http.ResponseWriter, r *http.Request, key string, val *string) bool {
@@ -43,29 +55,31 @@ func Require(w http.ResponseWriter, r *http.Request, key string, val *string) bo
 }
 
 // Start HTTP server and block until the server shuts down. Panic on error.
-func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind, authToken string) {
+func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind, authToken string, backwardsCompatibleAPI bool) {
 	var err error
 	HttpDB, err = db.OpenDB(dir)
 	if err != nil {
 		panic(err)
 	}
 
+	router := httprouter.New()
+
 	// These endpoints are always available and do not require authentication
-	http.HandleFunc("/", Welcome)
-	http.HandleFunc("/version", Version)
-	http.HandleFunc("/memstats", MemStats)
+	router.GET("/", Welcome)
+	router.GET("/version", Version)
+	router.GET("/memstats", MemStats)
 
 	// Install API endpoint handlers that may require authorization
-	var authWrap func(http.HandlerFunc) http.HandlerFunc
+	var authWrap func(httprouter.Handle) httprouter.Handle
 	if authToken != "" {
 		tdlog.Noticef("API endpoints now require the pre-shared token in Authorization header.")
-		authWrap = func(originalHandler http.HandlerFunc) http.HandlerFunc {
-			return func(w http.ResponseWriter, r *http.Request) {
+		authWrap = func(originalHandler httprouter.Handle) httprouter.Handle {
+			return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 				if "token "+authToken != r.Header.Get("Authorization") {
 					http.Error(w, "", http.StatusUnauthorized)
 					return
 				}
-				originalHandler(w, r)
+				originalHandler(w, r, ps)
 			}
 		}
 	} else if jwtPubKey != "" && jwtPrivateKey != "" {
@@ -87,34 +101,65 @@ func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind,
 		http.HandleFunc("/checkjwt", checkJWT)
 	} else {
 		tdlog.Noticef("API endpoints do not require Authorization header.")
-		authWrap = func(originalHandler http.HandlerFunc) http.HandlerFunc {
+		authWrap = func(originalHandler httprouter.Handle) httprouter.Handle {
 			return originalHandler
 		}
 	}
+
+	// Legacy API Routes
+	if backwardsCompatibleAPI {
+		// collection management (stop-the-world)
+		router.GET("/create", authWrap(Create))
+		router.GET("/rename", authWrap(Rename))
+		router.GET("/drop", authWrap(Drop))
+		router.GET("/all", authWrap(All))
+		router.GET("/scrub", authWrap(Scrub))
+		router.GET("/sync", authWrap(Sync))
+		// query
+		router.GET("/query", authWrap(Query))
+		router.GET("/count", authWrap(Count))
+		// document management
+		router.GET("/insert", authWrap(Insert))
+		router.GET("/get", authWrap(Get))
+		router.GET("/getpage", authWrap(GetPage))
+		router.GET("/update", authWrap(Update))
+		router.GET("/delete", authWrap(Delete))
+		router.GET("/approxdoccount", authWrap(ApproxDocCount))
+		// index management (stop-the-world)
+		router.GET("/index", authWrap(Index))
+		router.GET("/indexes", authWrap(Indexes))
+		router.GET("/unindex", authWrap(Unindex))
+
+		// misc (stop-the-world)
+		router.GET("/shutdown", authWrap(Shutdown))
+		router.GET("/dump", authWrap(Dump))
+	}
+
 	// collection management (stop-the-world)
-	http.HandleFunc("/create", authWrap(Create))
-	http.HandleFunc("/rename", authWrap(Rename))
-	http.HandleFunc("/drop", authWrap(Drop))
-	http.HandleFunc("/all", authWrap(All))
-	http.HandleFunc("/scrub", authWrap(Scrub))
-	http.HandleFunc("/sync", authWrap(Sync))
+	router.POST("/collection/:collection_name", authWrap(Create))
+	router.PUT("/collection/:collection_name/rename/:new_collection_name", authWrap(Rename))
+	router.DELETE("/collection/:collection_name", authWrap(Drop))
+	router.GET("/collections", authWrap(All))
+	router.POST("/collection/:collection_name/scrub", authWrap(Scrub))
+	router.POST("/sync", authWrap(Sync))
 	// query
-	http.HandleFunc("/query", authWrap(Query))
-	http.HandleFunc("/count", authWrap(Count))
+	router.POST("/collection/:collection_name/query", authWrap(Query))
+	router.POST("/collection/:collection_name/count", authWrap(Count))
 	// document management
-	http.HandleFunc("/insert", authWrap(Insert))
-	http.HandleFunc("/get", authWrap(Get))
-	http.HandleFunc("/getpage", authWrap(GetPage))
-	http.HandleFunc("/update", authWrap(Update))
-	http.HandleFunc("/delete", authWrap(Delete))
-	http.HandleFunc("/approxdoccount", authWrap(ApproxDocCount))
+	router.POST("/collection/:collection_name/doc", authWrap(Insert))
+	router.GET("/collection/:collection_name/doc/:id", authWrap(Get))
+	router.PUT("/collection/:collection_name/doc/:id", authWrap(Update))
+	router.DELETE("/collection/:collection_name/doc/:id", authWrap(Delete))
+	router.GET("/collection/:collection_name/page/:page/of/:total", authWrap(GetPage))
+	// TODO: Review if it will make more sense for it to be just /collection/:collection_name/count
+	router.GET("/collection/:collection_name/count/approx", authWrap(ApproxDocCount))
 	// index management (stop-the-world)
-	http.HandleFunc("/index", authWrap(Index))
-	http.HandleFunc("/indexes", authWrap(Indexes))
-	http.HandleFunc("/unindex", authWrap(Unindex))
+	router.POST("/collection/:collection_name/index", authWrap(Index))
+	router.DELETE("/collection/:collection_name/index", authWrap(Unindex))
+	router.GET("/collection/:collection_name/indexes", authWrap(Indexes))
 	// misc (stop-the-world)
-	http.HandleFunc("/shutdown", authWrap(Shutdown))
-	http.HandleFunc("/dump", authWrap(Dump))
+	router.POST("/shutdown", authWrap(Shutdown))
+	router.POST("/dump", authWrap(Dump))
 
 	iface := "all interfaces"
 	if bind != "" {
@@ -128,12 +173,12 @@ func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind,
 		}
 	} else {
 		tdlog.Noticef("Will listen on %s (HTTP), port %d.", iface, port)
-		http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), nil)
+		http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), router)
 	}
 }
 
 // Greet user with a welcome message.
-func Welcome(w http.ResponseWriter, r *http.Request) {
+func Welcome(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if r.URL.Path != "/" {
 		http.Error(w, "Invalid API endpoint", 404)
 		return

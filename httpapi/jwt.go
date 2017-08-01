@@ -44,6 +44,7 @@ import (
 	"github.com/HouzuoGuo/tiedot/tdlog"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
+	"github.com/julienschmidt/httprouter"
 )
 
 var (
@@ -205,8 +206,8 @@ func checkJWT(w http.ResponseWriter, r *http.Request) {
 }
 
 // Enable JWT authorization check on the HTTP handler function.
-func jwtWrap(originalHandler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func jwtWrap(originalHandler httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		addCommonJwtRespHeaders(w, r)
 		// Look for JWT in both headers and request value "access_token".
 		token, err := request.ParseFromRequest(r, TokenExtractor{}, func(token *jwt.Token) (interface{}, error) {
@@ -225,7 +226,7 @@ func jwtWrap(originalHandler http.HandlerFunc) http.HandlerFunc {
 		var col = r.FormValue("col")
 		// Call the API endpoint handler if authorization allows
 		if tokenClaims[JWT_USER_ATTR] == JWT_USER_ADMIN {
-			originalHandler(w, r)
+			originalHandler(w, r, ps)
 			return
 		}
 		if !sliceContainsStr(tokenClaims[JWT_ENDPOINTS_ATTR], url) {
@@ -235,7 +236,7 @@ func jwtWrap(originalHandler http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
-		originalHandler(w, r)
+		originalHandler(w, r, ps)
 	}
 }
 

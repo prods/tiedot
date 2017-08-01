@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"github.com/julienschmidt/httprouter"
 )
 
 // Flush and close all data files and shutdown the entire program.
-func Shutdown(w http.ResponseWriter, r *http.Request) {
+func Shutdown(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -21,14 +22,35 @@ func Shutdown(w http.ResponseWriter, r *http.Request) {
 }
 
 // Copy this database into destination directory.
-func Dump(w http.ResponseWriter, r *http.Request) {
+func Dump(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var dest string
-	if !Require(w, r, "dest", &dest) {
-		return
+
+	if IsNewAPIRoute(r) {
+		var jsonDoc struct {
+			Destination string `json:"destination"`
+		}
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&jsonDoc)
+		if err != nil {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", jsonDoc), 400)
+			return
+		}
+		dest = jsonDoc.Destination
+		if dest == "" {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, "No destination was provided.", 400)
+			return
+		}
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "dest", &dest) {
+			return
+		}
 	}
 	if err := HttpDB.Dump(dest); err != nil {
 		http.Error(w, fmt.Sprint(err), 500)
@@ -37,7 +59,7 @@ func Dump(w http.ResponseWriter, r *http.Request) {
 }
 
 // Return server memory statistics.
-func MemStats(w http.ResponseWriter, r *http.Request) {
+func MemStats(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -53,7 +75,7 @@ func MemStats(w http.ResponseWriter, r *http.Request) {
 }
 
 // Return server protocol version number.
-func Version(w http.ResponseWriter, r *http.Request) {
+func Version(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

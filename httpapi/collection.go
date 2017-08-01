@@ -6,19 +6,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"github.com/julienschmidt/httprouter"
 )
 
 // Create a collection.
-func Create(w http.ResponseWriter, r *http.Request) {
+func Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col string
-	if !Require(w, r, "col", &col) {
-		return
+
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
 	}
 	if err := HttpDB.Create(col); err != nil {
+		// TODO: Wrap Error in Object (JSON)
 		http.Error(w, fmt.Sprint(err), 400)
 	} else {
 		w.WriteHeader(201)
@@ -26,7 +34,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Return all collection names.
-func All(w http.ResponseWriter, r *http.Request) {
+func All(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -37,6 +45,7 @@ func All(w http.ResponseWriter, r *http.Request) {
 	}
 	resp, err := json.Marshal(cols)
 	if err != nil {
+		// TODO: Wrap Error in Object (JSON)
 		http.Error(w, fmt.Sprint(err), 500)
 		return
 	}
@@ -44,50 +53,71 @@ func All(w http.ResponseWriter, r *http.Request) {
 }
 
 // Rename a collection.
-func Rename(w http.ResponseWriter, r *http.Request) {
+func Rename(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var oldName, newName string
-	if !Require(w, r, "old", &oldName) {
-		return
+
+	if IsNewAPIRoute(r) {
+		oldName = p.ByName("collection_name")
+		newName = p.ByName("new_collection_name")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "old", &oldName) {
+			return
+		}
+		if !Require(w, r, "new", &newName) {
+			return
+		}
 	}
-	if !Require(w, r, "new", &newName) {
-		return
-	}
+
 	if err := HttpDB.Rename(oldName, newName); err != nil {
+		// TODO: Wrap Error in Object (JSON)
 		http.Error(w, fmt.Sprint(err), 400)
 	}
 }
 
 // Drop a collection.
-func Drop(w http.ResponseWriter, r *http.Request) {
+func Drop(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col string
-	if !Require(w, r, "col", &col) {
-		return
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
 	}
 	if err := HttpDB.Drop(col); err != nil {
+		// TODO: Wrap Error in Object (JSON)
 		http.Error(w, fmt.Sprint(err), 400)
 	}
 }
 
 // De-fragment collection free space and fix corrupted documents.
-func Scrub(w http.ResponseWriter, r *http.Request) {
+func Scrub(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col string
-	if !Require(w, r, "col", &col) {
-		return
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
 	}
 	dbCol := HttpDB.Use(col)
 	if dbCol == nil {
+		// TODO: Wrap Error in Object (JSON)
 		http.Error(w, fmt.Sprintf("Collection %s does not exist", col), 400)
 	} else {
 		HttpDB.Scrub(col)
@@ -97,7 +127,7 @@ func Scrub(w http.ResponseWriter, r *http.Request) {
 /*
 Noop
 */
-func Sync(w http.ResponseWriter, r *http.Request) {
+func Sync(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 }

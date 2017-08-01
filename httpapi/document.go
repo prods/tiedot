@@ -7,25 +7,39 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"github.com/julienschmidt/httprouter"
 )
 
 // Insert a document into collection.
-func Insert(w http.ResponseWriter, r *http.Request) {
+func Insert(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, doc string
-	if !Require(w, r, "col", &col) {
-		return
-	}
-	if !Require(w, r, "doc", &doc) {
-		return
-	}
 	var jsonDoc map[string]interface{}
-	if err := json.Unmarshal([]byte(doc), &jsonDoc); err != nil {
-		http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", doc), 400)
-		return
+
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&jsonDoc)
+		if err != nil {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", doc), 400)
+			return
+		}
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
+		if !Require(w, r, "doc", &doc) {
+			return
+		}
+		if err := json.Unmarshal([]byte(doc), &jsonDoc); err != nil {
+			http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", doc), 400)
+			return
+		}
 	}
 	dbcol := HttpDB.Use(col)
 	if dbcol == nil {
@@ -42,18 +56,26 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 }
 
 // Find and retrieve a document by ID.
-func Get(w http.ResponseWriter, r *http.Request) {
+func Get(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, id string
-	if !Require(w, r, "col", &col) {
-		return
+
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+		id = p.ByName("id")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
+		if !Require(w, r, "id", &id) {
+			return
+		}
 	}
-	if !Require(w, r, "id", &id) {
-		return
-	}
+
 	docID, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Invalid document ID '%v'.", id), 400)
@@ -78,20 +100,28 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 // Divide documents into roughly equally sized pages, and return documents in the specified page.
-func GetPage(w http.ResponseWriter, r *http.Request) {
+func GetPage(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, page, total string
-	if !Require(w, r, "col", &col) {
-		return
-	}
-	if !Require(w, r, "page", &page) {
-		return
-	}
-	if !Require(w, r, "total", &total) {
-		return
+
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+		page = p.ByName("page")
+		total = p.ByName("total")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
+		if !Require(w, r, "page", &page) {
+			return
+		}
+		if !Require(w, r, "total", &total) {
+			return
+		}
 	}
 	totalPage, err := strconv.Atoi(total)
 	if err != nil || totalPage < 1 {
@@ -125,29 +155,45 @@ func GetPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update a document.
-func Update(w http.ResponseWriter, r *http.Request) {
+func Update(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, id, doc string
-	if !Require(w, r, "col", &col) {
-		return
-	}
-	if !Require(w, r, "id", &id) {
-		return
-	}
-	if !Require(w, r, "doc", &doc) {
-		return
+	var newDoc map[string]interface{}
+
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+		id = p.ByName("id")
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&newDoc)
+		if err != nil {
+			// TODO: Wrap Error in Object (JSON)
+			http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", newDoc), 400)
+			return
+		}
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
+		if !Require(w, r, "id", &id) {
+			return
+		}
+		if !Require(w, r, "doc", &doc) {
+			return
+		}
+
+		if err := json.Unmarshal([]byte(doc), &newDoc); err != nil {
+			http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", newDoc), 400)
+			return
+		}
+
 	}
 	docID, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Invalid document ID '%v'.", id), 400)
-		return
-	}
-	var newDoc map[string]interface{}
-	if err := json.Unmarshal([]byte(doc), &newDoc); err != nil {
-		http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", newDoc), 400)
 		return
 	}
 	dbcol := HttpDB.Use(col)
@@ -163,17 +209,24 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete a document.
-func Delete(w http.ResponseWriter, r *http.Request) {
+func Delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col, id string
-	if !Require(w, r, "col", &col) {
-		return
-	}
-	if !Require(w, r, "id", &id) {
-		return
+
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+		id = p.ByName("id")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
+		if !Require(w, r, "id", &id) {
+			return
+		}
 	}
 	docID, err := strconv.Atoi(id)
 	if err != nil {
@@ -189,14 +242,19 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // Return approximate number of documents in the collection.
-func ApproxDocCount(w http.ResponseWriter, r *http.Request) {
+func ApproxDocCount(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	var col string
-	if !Require(w, r, "col", &col) {
-		return
+	if IsNewAPIRoute(r) {
+		col = p.ByName("collection_name")
+	} else {
+		// TODO: Remove once Old API is discontinued
+		if !Require(w, r, "col", &col) {
+			return
+		}
 	}
 	dbcol := HttpDB.Use(col)
 	if dbcol == nil {
