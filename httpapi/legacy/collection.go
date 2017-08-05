@@ -1,15 +1,17 @@
 // Collection management handlers.
 
-package httpapi
+package legacy
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"github.com/julienschmidt/httprouter"
+	"github.com/HouzuoGuo/tiedot/httpapi/shared"
 )
 
 // Create a collection.
-func Create(w http.ResponseWriter, r *http.Request) {
+func Create(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -18,7 +20,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if !Require(w, r, "col", &col) {
 		return
 	}
-	if err := HttpDB.Create(col); err != nil {
+	if err := shared.GetDatabaseInstance().Create(col); err != nil {
 		http.Error(w, fmt.Sprint(err), 400)
 	} else {
 		w.WriteHeader(201)
@@ -26,13 +28,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Return all collection names.
-func All(w http.ResponseWriter, r *http.Request) {
+func All(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods","POST, GET, PUT, OPTIONS")
 	cols := make([]string, 0)
-	for _, v := range HttpDB.AllCols() {
+	for _, v := range shared.GetDatabaseInstance().AllCols() {
 		cols = append(cols, v)
 	}
 	resp, err := json.Marshal(cols)
@@ -44,7 +46,7 @@ func All(w http.ResponseWriter, r *http.Request) {
 }
 
 // Rename a collection.
-func Rename(w http.ResponseWriter, r *http.Request) {
+func Rename(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -56,13 +58,13 @@ func Rename(w http.ResponseWriter, r *http.Request) {
 	if !Require(w, r, "new", &newName) {
 		return
 	}
-	if err := HttpDB.Rename(oldName, newName); err != nil {
+	if err := shared.GetDatabaseInstance().Rename(oldName, newName); err != nil {
 		http.Error(w, fmt.Sprint(err), 400)
 	}
 }
 
 // Drop a collection.
-func Drop(w http.ResponseWriter, r *http.Request) {
+func Drop(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -71,13 +73,13 @@ func Drop(w http.ResponseWriter, r *http.Request) {
 	if !Require(w, r, "col", &col) {
 		return
 	}
-	if err := HttpDB.Drop(col); err != nil {
+	if err := shared.GetDatabaseInstance().Drop(col); err != nil {
 		http.Error(w, fmt.Sprint(err), 400)
 	}
 }
 
 // De-fragment collection free space and fix corrupted documents.
-func Scrub(w http.ResponseWriter, r *http.Request) {
+func Scrub(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -86,18 +88,18 @@ func Scrub(w http.ResponseWriter, r *http.Request) {
 	if !Require(w, r, "col", &col) {
 		return
 	}
-	dbCol := HttpDB.Use(col)
+	dbCol := shared.GetDatabaseInstance().Use(col)
 	if dbCol == nil {
 		http.Error(w, fmt.Sprintf("Collection %s does not exist", col), 400)
 	} else {
-		HttpDB.Scrub(col)
+		shared.GetDatabaseInstance().Scrub(col)
 	}
 }
 
 /*
 Noop
 */
-func Sync(w http.ResponseWriter, r *http.Request) {
+func Sync(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 }

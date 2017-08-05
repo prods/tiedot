@@ -30,7 +30,7 @@ If they are missing, they will be re-created automatically upon startup.
 The special user identity "admin" allows access to all features and collection data. Its default password is empty string.
 */
 
-package httpapi
+package jwtsupport
 
 import (
 	"fmt"
@@ -44,12 +44,23 @@ import (
 	"github.com/HouzuoGuo/tiedot/tdlog"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
+	"github.com/julienschmidt/httprouter"
+	"github.com/HouzuoGuo/tiedot/httpapi/shared"
 )
 
 var (
 	privateKey *rsa.PrivateKey //openssl genrsa -out rsa 1024
 	publicKey  *rsa.PublicKey  //openssl rsa -in rsa -pubout > rsa.pub
 )
+
+func GetPublicKey() *rsa.PublicKey  {
+	return publicKey
+}
+
+func GetPrivateKey() *rsa.PrivateKey {
+	return privateKey
+}
+
 
 const (
 	// JWT Record and claim
@@ -66,12 +77,12 @@ const (
 // If necessary, create the JWT identity collection, indexes, and the default/special user identity "admin".
 func jwtInitSetup() {
 	// Create collection
-	if HttpDB.Use(JWT_COL_NAME) == nil {
-		if err := HttpDB.Create(JWT_COL_NAME); err != nil {
+	if shared.GetDatabaseInstance().Use(JWT_COL_NAME) == nil {
+		if err := shared.GetDatabaseInstance().Create(JWT_COL_NAME); err != nil {
 			tdlog.Panicf("JWT: failed to create JWT identity collection - %v", err)
 		}
 	}
-	jwtCol := HttpDB.Use(JWT_COL_NAME)
+	jwtCol := shared.GetDatabaseInstance().Use(JWT_COL_NAME)
 	// Create indexes on ID attribute
 	indexPaths := make(map[string]struct{})
 	for _, oneIndex := range jwtCol.AllIndexes() {
@@ -123,7 +134,7 @@ func getJWT(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Please pass JWT 'user' parameter", http.StatusBadRequest)
 		return
 	}
-	jwtCol := HttpDB.Use(JWT_COL_NAME)
+	jwtCol := shared.GetDatabaseInstance().Use(JWT_COL_NAME)
 	if jwtCol == nil {
 		http.Error(w, "Server is missing JWT identity collection, please restart the server.", http.StatusInternalServerError)
 		return
@@ -205,8 +216,8 @@ func checkJWT(w http.ResponseWriter, r *http.Request) {
 }
 
 // Enable JWT authorization check on the HTTP handler function.
-func jwtWrap(originalHandler http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func jwtWrap(originalHandler httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		addCommonJwtRespHeaders(w, r)
 		// Look for JWT in both headers and request value "access_token".
 		token, err := request.ParseFromRequest(r, TokenExtractor{}, func(token *jwt.Token) (interface{}, error) {
@@ -225,7 +236,7 @@ func jwtWrap(originalHandler http.HandlerFunc) http.HandlerFunc {
 		var col = r.FormValue("col")
 		// Call the API endpoint handler if authorization allows
 		if tokenClaims[JWT_USER_ATTR] == JWT_USER_ADMIN {
-			originalHandler(w, r)
+			originalHandler(w, r, ps)
 			return
 		}
 		if !sliceContainsStr(tokenClaims[JWT_ENDPOINTS_ATTR], url) {
@@ -235,7 +246,7 @@ func jwtWrap(originalHandler http.HandlerFunc) http.HandlerFunc {
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
-		originalHandler(w, r)
+		originalHandler(w, r, ps)
 	}
 }
 

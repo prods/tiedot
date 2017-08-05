@@ -1,16 +1,18 @@
 // Document management handlers.
 
-package httpapi
+package legacy
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"github.com/julienschmidt/httprouter"
+	"github.com/HouzuoGuo/tiedot/httpapi/shared"
 )
 
 // Insert a document into collection.
-func Insert(w http.ResponseWriter, r *http.Request) {
+func Insert(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -27,7 +29,7 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", doc), 400)
 		return
 	}
-	dbcol := HttpDB.Use(col)
+	dbcol := shared.GetDatabaseInstance().Use(col)
 	if dbcol == nil {
 		http.Error(w, fmt.Sprintf("Collection '%s' does not exist.", col), 400)
 		return
@@ -42,7 +44,7 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 }
 
 // Find and retrieve a document by ID.
-func Get(w http.ResponseWriter, r *http.Request) {
+func Get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -59,7 +61,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid document ID '%v'.", id), 400)
 		return
 	}
-	dbcol := HttpDB.Use(col)
+	dbcol := shared.GetDatabaseInstance().Use(col)
 	if dbcol == nil {
 		http.Error(w, fmt.Sprintf("Collection '%s' does not exist.", col), 400)
 		return
@@ -78,7 +80,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 // Divide documents into roughly equally sized pages, and return documents in the specified page.
-func GetPage(w http.ResponseWriter, r *http.Request) {
+func GetPage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -103,7 +105,7 @@ func GetPage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid page number '%v'.", page), 400)
 		return
 	}
-	dbcol := HttpDB.Use(col)
+	dbcol := shared.GetDatabaseInstance().Use(col)
 	if dbcol == nil {
 		http.Error(w, fmt.Sprintf("Collection '%s' does not exist.", col), 400)
 		return
@@ -125,7 +127,7 @@ func GetPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update a document.
-func Update(w http.ResponseWriter, r *http.Request) {
+func Update(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -150,7 +152,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", newDoc), 400)
 		return
 	}
-	dbcol := HttpDB.Use(col)
+	dbcol := shared.GetDatabaseInstance().Use(col)
 	if dbcol == nil {
 		http.Error(w, fmt.Sprintf("Collection '%s' does not exist.", col), 400)
 		return
@@ -163,7 +165,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete a document.
-func Delete(w http.ResponseWriter, r *http.Request) {
+func Delete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -180,7 +182,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid document ID '%v'.", id), 400)
 		return
 	}
-	dbcol := HttpDB.Use(col)
+	dbcol := shared.GetDatabaseInstance().Use(col)
 	if dbcol == nil {
 		http.Error(w, fmt.Sprintf("Collection '%s' does not exist.", col), 400)
 		return
@@ -189,7 +191,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // Return approximate number of documents in the collection.
-func ApproxDocCount(w http.ResponseWriter, r *http.Request) {
+func ApproxDocCount(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Cache-Control", "must-revalidate")
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -198,7 +200,7 @@ func ApproxDocCount(w http.ResponseWriter, r *http.Request) {
 	if !Require(w, r, "col", &col) {
 		return
 	}
-	dbcol := HttpDB.Use(col)
+	dbcol := shared.GetDatabaseInstance().Use(col)
 	if dbcol == nil {
 		http.Error(w, fmt.Sprintf("Collection '%s' does not exist.", col), 400)
 		return

@@ -20,101 +20,94 @@ package httpapi
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
-
-	"github.com/HouzuoGuo/tiedot/db"
 	"github.com/HouzuoGuo/tiedot/tdlog"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/HouzuoGuo/tiedot/httpapi/legacy"
+	"github.com/julienschmidt/httprouter"
+	"github.com/HouzuoGuo/tiedot/httpapi/middlewares"
+	"github.com/HouzuoGuo/tiedot/httpapi/shared"
 )
-
-var (
-	HttpDB *db.DB // HTTP API endpoints operate on this database
-)
-
-// Store form parameter value of specified key to *val and return true; if key does not exist, set HTTP status 400 and return false.
-func Require(w http.ResponseWriter, r *http.Request, key string, val *string) bool {
-	*val = r.FormValue(key)
-	if *val == "" {
-		http.Error(w, fmt.Sprintf("Please pass POST/PUT/GET parameter value of '%s'.", key), 400)
-		return false
-	}
-	return true
-}
 
 // Start HTTP server and block until the server shuts down. Panic on error.
-func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind, authToken string) {
-	var err error
-	HttpDB, err = db.OpenDB(dir)
+func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind, authToken string, supportLegacyAPI bool) {
+	// Initialize Database Instance
+	err := shared.InitializeDatabaseInstance(dir)
 	if err != nil {
 		panic(err)
 	}
-
-	// These endpoints are always available and do not require authentication
-	http.HandleFunc("/", Welcome)
-	http.HandleFunc("/version", Version)
-	http.HandleFunc("/memstats", MemStats)
-
-	// Install API endpoint handlers that may require authorization
-	var authWrap func(http.HandlerFunc) http.HandlerFunc
-	if authToken != "" {
-		tdlog.Noticef("API endpoints now require the pre-shared token in Authorization header.")
-		authWrap = func(originalHandler http.HandlerFunc) http.HandlerFunc {
-			return func(w http.ResponseWriter, r *http.Request) {
-				if "token "+authToken != r.Header.Get("Authorization") {
-					http.Error(w, "", http.StatusUnauthorized)
-					return
-				}
-				originalHandler(w, r)
-			}
-		}
-	} else if jwtPubKey != "" && jwtPrivateKey != "" {
-		tdlog.Noticef("API endpoints now require JWT in Authorization header.")
-		var publicKeyContent, privateKeyContent []byte
-		if publicKeyContent, err = ioutil.ReadFile(jwtPubKey); err != nil {
-			panic(err)
-		} else if publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicKeyContent); err != nil {
-			panic(err)
-		} else if privateKeyContent, err = ioutil.ReadFile(jwtPrivateKey); err != nil {
-			panic(err)
-		} else if privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKeyContent); err != nil {
-			panic(err)
-		}
-		jwtInitSetup()
-		authWrap = jwtWrap
-		// does not require JWT auth
-		http.HandleFunc("/getjwt", getJWT)
-		http.HandleFunc("/checkjwt", checkJWT)
-	} else {
-		tdlog.Noticef("API endpoints do not require Authorization header.")
-		authWrap = func(originalHandler http.HandlerFunc) http.HandlerFunc {
-			return originalHandler
-		}
+	
+	// Initialize JWT Support 
+	jwtSupport, err := middlewares.NewJWTAuthentication(jwtPubKey, jwtPrivateKey, authToken)
+	if err != nil {
+		panic(err)
 	}
+	jwtAuthMiddleware := jwtSupport.AuthenticationHandler
+	
+	// Initialize Router
+	router := httprouter.New()
+
+	if supportLegacyAPI {
+		// These endpoints are always available and do not require authentication
+		router.GET("/", Welcome)
+		router.GET("/version", legacy.Version)
+		router.GET("/memstats", legacy.MemStats)
+		// collection management (stop-the-world)
+		router.GET("/create", jwtAuthMiddleware(legacy.Create))
+		router.GET("/rename", jwtAuthMiddleware(legacy.Rename))
+		router.GET("/drop", jwtAuthMiddleware(legacy.Drop))
+		router.GET("/all", jwtAuthMiddleware(legacy.All))
+		router.GET("/scrub", jwtAuthMiddleware(legacy.Scrub))
+		router.GET("/sync", jwtAuthMiddleware(legacy.Sync))
+		// query
+		router.GET("/query", jwtAuthMiddleware(legacy.Query))
+		router.GET("/count", jwtAuthMiddleware(legacy.Count))
+		// document management
+		router.GET("/insert", jwtAuthMiddleware(legacy.Insert))
+		router.GET("/get", jwtAuthMiddleware(legacy.Get))
+		router.GET("/getpage", jwtAuthMiddleware(legacy.GetPage))
+		router.GET("/update", jwtAuthMiddleware(legacy.Update))
+		router.GET("/delete", jwtAuthMiddleware(legacy.Delete))
+		router.GET("/approxdoccount", jwtAuthMiddleware(legacy.ApproxDocCount))
+		// index management (stop-the-world)
+		router.GET("/index", jwtAuthMiddleware(legacy.Index))
+		router.GET("/indexes", jwtAuthMiddleware(legacy.Indexes))
+		router.GET("/unindex", jwtAuthMiddleware(legacy.Unindex))
+		// misc (stop-the-world)
+		router.GET("/shutdown", jwtAuthMiddleware(legacy.Shutdown))
+		router.GET("/dump", jwtAuthMiddleware(legacy.Dump))
+	}
+
+	// New API
+	// These endpoints are always available and do not require authentication
+	router.GET("/", middlewares.StandardResponse(Welcome))
+	router.GET("/version", middlewares.StandardResponse(legacy.Version))
+	router.GET("/memstats", middlewares.StandardResponse(legacy.MemStats))
+
 	// collection management (stop-the-world)
-	http.HandleFunc("/create", authWrap(Create))
-	http.HandleFunc("/rename", authWrap(Rename))
-	http.HandleFunc("/drop", authWrap(Drop))
-	http.HandleFunc("/all", authWrap(All))
-	http.HandleFunc("/scrub", authWrap(Scrub))
-	http.HandleFunc("/sync", authWrap(Sync))
+	router.POST("/collection/:collection_name", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Create)))
+	router.PUT("/collection/:collection_name/rename/:new_collection_name", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Rename)))
+	router.DELETE("/collection/:collection_name", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Drop)))
+	router.GET("/collections", jwtAuthMiddleware(middlewares.StandardResponse(legacy.All)))
+	router.POST("/collection/:collection_name/scrub", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Scrub)))
+	router.POST("/sync", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Sync)))
 	// query
-	http.HandleFunc("/query", authWrap(Query))
-	http.HandleFunc("/count", authWrap(Count))
+	router.POST("/collection/:collection_name/query", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Query)))
+	router.POST("/collection/:collection_name/count", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Count)))
 	// document management
-	http.HandleFunc("/insert", authWrap(Insert))
-	http.HandleFunc("/get", authWrap(Get))
-	http.HandleFunc("/getpage", authWrap(GetPage))
-	http.HandleFunc("/update", authWrap(Update))
-	http.HandleFunc("/delete", authWrap(Delete))
-	http.HandleFunc("/approxdoccount", authWrap(ApproxDocCount))
+	router.POST("/collection/:collection_name/doc",jwtAuthMiddleware(middlewares.StandardResponse(legacy.Insert)))
+	router.GET("/collection/:collection_name/doc/:id", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Get)))
+	router.PUT("/collection/:collection_name/doc/:id", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Update)))
+	router.DELETE("/collection/:collection_name/doc/:id", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Delete)))
+	router.GET("/collection/:collection_name/page/:page/of/:total", jwtAuthMiddleware(middlewares.StandardResponse(legacy.GetPage)))
+	// TODO: Review if it will make more sense for it to be just /collection/:collection_name/count
+	router.GET("/collection/:collection_name/count/approx", jwtAuthMiddleware(middlewares.StandardResponse(legacy.ApproxDocCount)))
 	// index management (stop-the-world)
-	http.HandleFunc("/index", authWrap(Index))
-	http.HandleFunc("/indexes", authWrap(Indexes))
-	http.HandleFunc("/unindex", authWrap(Unindex))
+	router.POST("/collection/:collection_name/index", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Index)))
+	router.DELETE("/collection/:collection_name/index", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Unindex)))
+	router.GET("/collection/:collection_name/indexes", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Indexes)))
 	// misc (stop-the-world)
-	http.HandleFunc("/shutdown", authWrap(Shutdown))
-	http.HandleFunc("/dump", authWrap(Dump))
+	router.POST("/shutdown", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Shutdown)))
+	router.POST("/dump", jwtAuthMiddleware(middlewares.StandardResponse(legacy.Dump)))
 
 	iface := "all interfaces"
 	if bind != "" {
@@ -133,7 +126,7 @@ func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind,
 }
 
 // Greet user with a welcome message.
-func Welcome(w http.ResponseWriter, r *http.Request) {
+func Welcome(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if r.URL.Path != "/" {
 		http.Error(w, "Invalid API endpoint", 404)
 		return

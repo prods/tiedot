@@ -1,4 +1,4 @@
-package httpapi
+package jwtsupport
 
 import (
 	"io/ioutil"
