@@ -64,14 +64,14 @@ func main() {
 	var port int
 	var authToken string
 	var tlsCrt, tlsKey string
-	var supportLegacyAPI bool
+	var userNewAPI bool
 	flag.StringVar(&dir, "dir", "", "(HTTP server) database directory")
 	flag.StringVar(&bind, "bind", "", "(HTTP server) bind to IP address (all network interfaces by default)")
 	flag.IntVar(&port, "port", 8080, "(HTTP server) port number")
 	flag.StringVar(&tlsCrt, "tlscrt", "", "(HTTP server) TLS certificate (empty to disable TLS).")
 	flag.StringVar(&tlsKey, "tlskey", "", "(HTTP server) TLS certificate key (empty to disable TLS).")
 	flag.StringVar(&authToken, "authtoken", "", "(HTTP server) Only authorize requests carrying this token in 'Authorization: token TOKEN' header. (empty to disable)")
-	flag.BoolVar(&supportLegacyAPI, "support-legacy-api", false, "Enables Legacy API Support.")
+	flag.BoolVar(&userNewAPI, "use-new-api", false, "Uses new restful API.")
 
 	// HTTP + JWT params
 	var jwtPubKey, jwtPrivateKey string
@@ -141,10 +141,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		if supportLegacyAPI {
-			legacyapi.Start(dir, port, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind, authToken)
-		} else {
+		if userNewAPI {
 			api.Start(dir, port, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind, authToken)
+		} else {
+			legacyapi.Start(dir, port, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind, authToken)
 		}
 	case "example":
 		// Run embedded usage examples
