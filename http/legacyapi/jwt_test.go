@@ -11,10 +11,10 @@ import (
 func TestJWTToken(t *testing.T) {
 	var err error
 	var privateKeyContent, publicKeyContent []byte
-	if privateKeyContent, err = ioutil.ReadFile("jwt-test.key"); err != nil {
+	if privateKeyContent, err = ioutil.ReadFile("../jwt-test.key"); err != nil {
 		t.Fatal(err)
 	}
-	if publicKeyContent, err = ioutil.ReadFile("jwt-test.pub"); err != nil {
+	if publicKeyContent, err = ioutil.ReadFile("../jwt-test.pub"); err != nil {
 		t.Fatal(err)
 	}
 	if privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateKeyContent); err != nil {

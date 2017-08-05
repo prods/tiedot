@@ -5,3 +5,7 @@ tiedot.exe
 
 # Project (Dev) Files
 .idea
+
+# Persistent Sample and test databases
+test_db
+sample_db

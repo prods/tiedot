@@ -145,7 +145,7 @@ func getJWT(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if rec[JWT_PASS_ATTR] != pass {
-			tdlog.CritNoRepeat("JWT: identitify verification failed from request sent by %s", r.RemoteAddr)
+			tdlog.CritNoRepeat("JWT: identify verification failed from request sent by %s", r.RemoteAddr)
 			break
 		}
 		// Successful password match
