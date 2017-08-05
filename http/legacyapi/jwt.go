@@ -30,7 +30,7 @@ If they are missing, they will be re-created automatically upon startup.
 The special user identity "admin" allows access to all features and collection data. Its default password is empty string.
 */
 
-package httpapi
+package legacyapi
 
 import (
 	"fmt"

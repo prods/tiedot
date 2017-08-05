@@ -1,6 +1,6 @@
 // Miscellaneous function handlers.
 
-package httpapi
+package legacyapi
 
 import (
 	"encoding/json"

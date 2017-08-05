@@ -1,6 +1,6 @@
 // Document management handlers.
 
-package httpapi
+package legacyapi
 
 import (
 	"encoding/json"
