@@ -83,9 +83,9 @@ func (module MiscellaneousAPIModule) MemStats(w http.ResponseWriter, r *http.Req
 func (module MiscellaneousAPIModule) Version(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	RespondOk(w, map[string]interface{} {
 		"version" : map[string]interface{} {
-			"engine" : "0",
-			"api": 2,
-			"protocol": 6,
+			"engine" : "3.5",
+			"api": "2",
+			"protocol": "6",
 		},
 	})
 }
