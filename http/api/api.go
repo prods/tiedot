@@ -34,6 +34,17 @@ func Start(dir string, port int, tlsCrt, tlsKey, jwtPubKey, jwtPrivateKey, bind,
 	indexesAPIModule := modules.NewIndexesAPIModule(databaseInstance)
 	modules.Mount(router, indexesAPIModule)
 
+	// Query API Module
+	queryAPIModule := modules.NewQueryAPIModule(databaseInstance)
+	modules.Mount(router, queryAPIModule)
+
+	// Collections API Module
+	collectionsAPIModule := modules.NewCollectionAPIModule(databaseInstance)
+	modules.Mount(router, collectionsAPIModule)
+
+	// Documents API Module
+	documentAPIModule := modules.NewDocumentAPIModule(databaseInstance)
+	modules.Mount(router, documentAPIModule)
 
 	// Server Initialization
 	iface := "all interfaces"

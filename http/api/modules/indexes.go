@@ -10,16 +10,15 @@ import (
 )
 
 type IndexesAPIModule struct {
-	routes []APIRoute
-	db *db.DB
+	*APIModuleBase
 }
 
 type IndexPath struct {
-	Path string `json:"path"`
+	Path []string `json:"path"`
 }
 
 func NewIndexesAPIModule(db *db.DB) *IndexesAPIModule {
-	newInstance := new(IndexesAPIModule)
+	newInstance := &IndexesAPIModule{&APIModuleBase{}}
 	newInstance.db = db
 	newInstance.routes = []APIRoute {
 		POST("/collection/:collection_name/index", newInstance.CreateNewIndex, true),
@@ -29,16 +28,20 @@ func NewIndexesAPIModule(db *db.DB) *IndexesAPIModule {
 	return newInstance
 }
 
-func (index IndexesAPIModule) GetRoutes() []APIRoute {
-	return index.routes
+func (module IndexesAPIModule) GetRoutes() []APIRoute {
+	return module.routes
 }
 
-func (index IndexesAPIModule) GetName() string {
+func (module IndexesAPIModule) GetName() string {
 	return "Indexes"
 }
 
+func (module IndexesAPIModule) GetDocumentation() APIModuleDocumentation {
+	return module.documentation
+}
+
 // Put an index on a document path.
-func (index IndexesAPIModule) CreateNewIndex(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (module IndexesAPIModule) CreateNewIndex(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var requestBody IndexPath
 
 	// Get Collection Name
@@ -50,7 +53,7 @@ func (index IndexesAPIModule) CreateNewIndex(w http.ResponseWriter, r *http.Requ
 
 	// Extract and Validate Request Body
 	if apiErr := ExtractAndValidateRequestBody(r, &requestBody, "create index", func(doc interface{}) map[string]interface{} {
-		if requestBody.Path == "" {
+		if len(requestBody.Path) == 0 {
 			return GetCollectionErrorObject("create index", errors.New("No Index path was provided."), collectionName)
 		}
 		return nil
@@ -60,13 +63,13 @@ func (index IndexesAPIModule) CreateNewIndex(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Perform Index Creation
-	dbcol := index.db.Use(collectionName)
+	dbcol := module.db.Use(collectionName)
 	if dbcol == nil {
-		RespondWithBadRequest(w, GetIndexErrorObject("create index", errors.New("Collection does not exist"), collectionName, requestBody.Path))
+		RespondWithBadRequest(w, GetIndexErrorObject("create index", errors.New("Collection does not exist"), collectionName, strings.Join(requestBody.Path, ",")))
 		return
 	}
-	if err := dbcol.Index(strings.Split(requestBody.Path, ",")); err != nil {
-		RespondWithBadRequest(w, GetIndexErrorObject("create index", err, collectionName, requestBody.Path))
+	if err := dbcol.Index(requestBody.Path); err != nil {
+		RespondWithBadRequest(w, GetIndexErrorObject("create index", err, collectionName, strings.Join(requestBody.Path, ",")))
 		return
 	}
 
@@ -81,7 +84,7 @@ func (index IndexesAPIModule) CreateNewIndex(w http.ResponseWriter, r *http.Requ
 }
 
 // Return all indexed paths.
-func (index IndexesAPIModule) GetIndexes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (module IndexesAPIModule) GetIndexes(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	// Get Collection Name
 	collectionName := p.ByName("collection_name")
@@ -91,7 +94,7 @@ func (index IndexesAPIModule) GetIndexes(w http.ResponseWriter, r *http.Request,
 	}
 
 	// Perform Index Creation
-	dbcol := index.db.Use(collectionName)
+	dbcol := module.db.Use(collectionName)
 	if dbcol == nil {
 		RespondWithBadRequest(w, GetCollectionErrorObject("get indexes",errors.New("Collection does not exist"), collectionName))
 		return
@@ -109,7 +112,7 @@ func (index IndexesAPIModule) GetIndexes(w http.ResponseWriter, r *http.Request,
 }
 
 // Remove an indexed path.
-func (index IndexesAPIModule) RemoveIndex(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (module IndexesAPIModule) RemoveIndex(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var requestBody IndexPath
 
 	// Get Collection Name
@@ -121,7 +124,7 @@ func (index IndexesAPIModule) RemoveIndex(w http.ResponseWriter, r *http.Request
 
 	// Extract and Validate Request Body
 	if apiErr := ExtractAndValidateRequestBody(r, &requestBody, "remove index", func(doc interface{}) map[string]interface{} {
-		if requestBody.Path == "" {
+		if len(requestBody.Path) == 0 {
 			return GetCollectionErrorObject("remove index", errors.New("No Index path was provided."), collectionName)
 		}
 		return nil
@@ -131,18 +134,18 @@ func (index IndexesAPIModule) RemoveIndex(w http.ResponseWriter, r *http.Request
 	}
 
 	// Perform Index Creation
-	dbcol := index.db.Use(collectionName)
+	dbcol := module.db.Use(collectionName)
 	if dbcol == nil {
-		RespondWithBadRequest(w, GetIndexErrorObject("remove index", errors.New("Collection does not exist"), collectionName, requestBody.Path))
+		RespondWithBadRequest(w, GetIndexErrorObject("remove index", errors.New("Collection does not exist"), collectionName, strings.Join(requestBody.Path, ",")))
 		return
 	}
-	if err := dbcol.Unindex(strings.Split(requestBody.Path, ",")); err != nil {
-		RespondWithBadRequest(w, GetIndexErrorObject("remove index", err, collectionName, requestBody.Path))
+	if err := dbcol.Unindex(requestBody.Path); err != nil {
+		RespondWithBadRequest(w, GetIndexErrorObject("remove index", err, collectionName, strings.Join(requestBody.Path, ",")))
 		return
 	}
 
 	// Report Success on Completion
-	RespondCreated(w, map[string]interface{} {
+	RespondOk(w, map[string]interface{} {
 		"operation" : "remove index",
 		"collection": collectionName,
 		"path" : requestBody.Path,

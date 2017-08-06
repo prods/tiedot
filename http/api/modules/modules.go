@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"errors"
+	"github.com/HouzuoGuo/tiedot/db"
 )
 
 const (
@@ -19,15 +20,24 @@ const (
 
 const JSON_EOF_ERROR string = "EOF"
 
+var documentation []APIModuleDocumentation
+
 type APIRoute struct {
 	Path string
 	Method int
 	Handler httprouter.Handle
 }
 
+type APIModuleBase struct {
+	routes []APIRoute
+	documentation APIModuleDocumentation
+	db *db.DB
+}
+
 type IAPIModule interface {
 	GetRoutes() []APIRoute
 	GetName() string
+	GetDocumentation() APIModuleDocumentation
 }
 
 func Mount(router *httprouter.Router, module IAPIModule) {
@@ -45,7 +55,15 @@ func Mount(router *httprouter.Router, module IAPIModule) {
 			router.DELETE(r.Path, r.Handler)
 		}
 	}
-	tdlog.Noticef("+ API Module '%s' was mounted.", module.GetName())
+	tdlog.Noticef("+ %s API Module was mounted.", module.GetName())
+
+	// Set Documentation
+	if documentation == nil {
+			documentation = make([]APIModuleDocumentation, 0)
+	}
+	documentation = append(documentation, module.GetDocumentation())
+	tdlog.Noticef("+ %s API Module documentation was registered.", module.GetName())
+
 }
 
 func NewAPIRoute(method int, path string, handler httprouter.Handle, requiresAuthentication bool) APIRoute {
