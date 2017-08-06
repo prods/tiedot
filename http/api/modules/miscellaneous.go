@@ -3,11 +3,11 @@ package modules
 import (
 	"net/http"
 	"os"
-	"fmt"
 	"runtime"
 	"encoding/json"
 	"github.com/HouzuoGuo/tiedot/db"
 	"github.com/julienschmidt/httprouter"
+	"errors"
 )
 
 type MiscellaneousAPIModule struct {
@@ -38,30 +38,28 @@ func (misc MiscellaneousAPIModule) GetName() string {
 // Flush and close all data files and shutdown the entire program.
 func (misc MiscellaneousAPIModule) Shutdown(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	misc.db.Close()
+	RespondOk(w, GetCompletionObject("shutdown"))
 	os.Exit(0)
 }
 
 // Copy this database into destination directory.
 func (misc MiscellaneousAPIModule) Dump(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var dest string
-	var jsonDoc struct {
+	var requestBody struct {
 		Destination string `json:"destination"`
 	}
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&jsonDoc)
-	if err != nil {
-		// TODO: Wrap Error in Object (JSON)
-		http.Error(w, fmt.Sprintf("'%v' is not valid JSON document.", jsonDoc), 400)
+	// Extract and Validate Request Body
+	if apiErr := ExtractAndValidateRequestBody(r, &requestBody, "dump", func(doc interface{}) map[string]interface{} {
+		if requestBody.Destination == "" {
+			return GetEngineErrorObject("dump", errors.New("No destination was provided."))
+		}
+		return nil
+	}); apiErr != nil {
+		RespondWithBadRequest(w, apiErr)
 		return
 	}
-	dest = jsonDoc.Destination
-	if dest == "" {
-		// TODO: Wrap Error in Object (JSON)
-		http.Error(w, "No destination was provided.", 400)
-		return
-	}
-	if err := misc.db.Dump(dest); err != nil {
-		http.Error(w, fmt.Sprint(err), 500)
+	// Perform Operation
+	if err := misc.db.Dump(requestBody.Destination); err != nil {
+		RespondWithInternalError(w, GetEngineErrorObject("dump", err))
 		return
 	}
 }
@@ -72,7 +70,7 @@ func (misc MiscellaneousAPIModule) MemStats(w http.ResponseWriter, r *http.Reque
 	runtime.ReadMemStats(stats)
 	resp, err := json.Marshal(stats)
 	if err != nil {
-		http.Error(w, "Cannot serialize MemStats to JSON.", 500)
+		RespondWithInternalError(w, GetEngineErrorObject("memstat", errors.New("Cannot serialize MemStats to JSON.")))
 		return
 	}
 	w.Write(resp)
@@ -80,5 +78,11 @@ func (misc MiscellaneousAPIModule) MemStats(w http.ResponseWriter, r *http.Reque
 
 // Return server protocol version number.
 func (misc MiscellaneousAPIModule) Version(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Write([]byte("6"))
+	RespondOk(w, map[string]interface{} {
+		"version" : map[string]interface{} {
+			"engine" : "0",
+			"api": 2,
+			"protocol": 6,
+		},
+	})
 }
