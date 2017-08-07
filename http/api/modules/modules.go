@@ -134,6 +134,12 @@ func RespondWithBadRequest(w http.ResponseWriter, responsePayload map[string]int
 	w.Write(m)
 }
 
+func RespondNotFound(w http.ResponseWriter, responsePayload map[string]interface{}) {
+	m, _ := json.Marshal(responsePayload)
+	w.WriteHeader(http.StatusNotFound)
+	w.Write(m)
+}
+
 func GetEngineErrorObject(operation string, err error) map[string]interface{} {
 	return map[string]interface{} {
 		"operation" : operation,
@@ -149,7 +155,7 @@ func GetCollectionErrorObject(operation string, err error, collectionName string
 	}
 }
 
-func GetDocumentErrorObject(operation string, err error, collectionName string, documentId string) map[string]interface{} {
+func GetDocumentErrorObject(operation string, err error, collectionName string, documentId int) map[string]interface{} {
 	return map[string]interface{} {
 		"operation" : operation,
 		"error" : err.Error(),
