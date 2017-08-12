@@ -246,42 +246,42 @@ func (module DocumentAPIModule) GetPageOfDocuments(w http.ResponseWriter, r *htt
 	// Get Collection Name
 	collectionName := p.ByName("collection_name")
 	if collectionName == "" {
-		RespondWithBadRequest(w, GetCollectionErrorObject("get page of document", errors.New("No Collection was provided"), ""))
-		return
-	}
-
-	// Get Page Number Value
-	pageValue := p.ByName("page")
-	if pageValue == "" {
-		RespondWithBadRequest(w, GetCollectionErrorObject("get page of document", errors.New("No Page Number was provided"), ""))
-		return
-	}
-
-	// Get Page Number Integer
-	pageNumber, err := strconv.Atoi(pageValue)
-	if err != nil {
-		RespondWithBadRequest(w, GetCollectionErrorObject("get document", errors.New(fmt.Sprintf("Invalid Page Number %s", pageValue)), collectionName))
+		RespondWithBadRequest(w, GetCollectionErrorObject("get page of documents", errors.New("No Collection was provided"), ""))
 		return
 	}
 
 	// Get Total per page value
 	totalValue := p.ByName("total")
 	if totalValue == "" {
-		RespondWithBadRequest(w, GetCollectionErrorObject("get page of document", errors.New("No Total per page was provided"), ""))
+		RespondWithBadRequest(w, GetCollectionErrorObject("get page of documents", errors.New("No Total per page was provided"), ""))
 		return
 	}
 
 	// Get Document Id Integer Value
 	totalPerPage, err := strconv.Atoi(totalValue)
-	if err != nil {
-		RespondWithBadRequest(w, GetCollectionErrorObject("get document", errors.New(fmt.Sprintf("Invalid Total per page %s", pageValue)), collectionName))
+	if err != nil || totalPerPage < 1 {
+		RespondWithBadRequest(w, GetCollectionErrorObject("get document", errors.New(fmt.Sprintf("Invalid Total per page %s", totalPerPage)), collectionName))
 		return
 	}
 
 	// Use Collection
 	dbcol := module.db.Use(collectionName)
 	if dbcol == nil {
-		RespondWithBadRequest(w, GetCollectionErrorObject("get page of document", errors.New("Collection does not exist"), collectionName))
+		RespondWithBadRequest(w, GetCollectionErrorObject("get page of documents", errors.New("Collection does not exist"), collectionName))
+		return
+	}
+
+	// Get Page Number Value
+	pageValue := p.ByName("page")
+	if pageValue == "" {
+		RespondWithBadRequest(w, GetCollectionErrorObject("get page of documents", errors.New("No Page Number was provided"), collectionName))
+		return
+	}
+
+	// Get Page Number Integer
+	pageNumber, err := strconv.Atoi(pageValue)
+	if err != nil || pageNumber < 0 || pageNumber >= totalPerPage {
+		RespondWithBadRequest(w, GetCollectionErrorObject("get page of documents", errors.New(fmt.Sprintf("Invalid Page Number %s", pageValue)), collectionName))
 		return
 	}
 

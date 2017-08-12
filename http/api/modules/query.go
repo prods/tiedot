@@ -6,6 +6,8 @@ import (
 
 	"net/http"
 	"github.com/julienschmidt/httprouter"
+	"errors"
+	"strconv"
 )
 
 type QueryAPIModule struct {
@@ -35,9 +37,80 @@ func (module QueryAPIModule) GetDocumentation() APIModuleDocumentation {
 }
 
 func (module QueryAPIModule) Query(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// TODO: Pending Query Implementation
+	var requestBody interface{}
+
+	// Get Collection Name
+	collectionName := p.ByName("collection_name")
+	if collectionName == "" {
+		RespondWithBadRequest(w, GetCollectionErrorObject("get all documents", errors.New("No Collection was provided"), ""))
+		return
+	}
+
+	// Extract and Validate Request Body
+	if apiErr := ExtractAndValidateRequestBody(r, &requestBody, "query", nil); apiErr != nil {
+		RespondWithBadRequest(w, apiErr)
+		return
+	}
+
+	dbcol := module.db.Use(collectionName)
+	if dbcol == nil {
+		RespondWithBadRequest(w, GetCollectionErrorObject("query", errors.New("Collection does not exist"), collectionName))
+		return
+	}
+
+	// Evaluate the query
+	queryResult := make(map[int]struct{})
+	if err := db.EvalQuery(requestBody, dbcol, &queryResult); err != nil {
+		RespondWithBadRequest(w, GetCollectionErrorObject("query", err, collectionName))
+		return
+	}
+	// Construct array of result
+	resultDocs := make(map[string]interface{}, len(queryResult))
+	counter := 0
+	for docID := range queryResult {
+		doc, _ := dbcol.Read(docID)
+		if doc != nil {
+			resultDocs[strconv.Itoa(docID)] = doc
+			counter++
+		}
+	}
+
+	RespondOk(w, resultDocs)
+	return
 }
 
 func (module QueryAPIModule) Count(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// TODO: Pending Query Count Implementation
+	var requestBody interface{}
+
+	// Get Collection Name
+	collectionName := p.ByName("collection_name")
+	if collectionName == "" {
+		RespondWithBadRequest(w, GetCollectionErrorObject("get all documents", errors.New("No Collection was provided"), ""))
+		return
+	}
+
+	// Extract and Validate Request Body
+	if apiErr := ExtractAndValidateRequestBody(r, &requestBody, "query", nil); apiErr != nil {
+		RespondWithBadRequest(w, apiErr)
+		return
+	}
+
+	dbcol := module.db.Use(collectionName)
+	if dbcol == nil {
+		RespondWithBadRequest(w, GetCollectionErrorObject("query", errors.New("Collection does not exist"), collectionName))
+		return
+	}
+
+	// Evaluate the query
+	queryResult := make(map[int]struct{})
+	if err := db.EvalQuery(requestBody, dbcol, &queryResult); err != nil {
+		RespondWithBadRequest(w, GetCollectionErrorObject("query", err, collectionName))
+		return
+	}
+
+	RespondOk(w, map[string]interface{} {
+		"collection": collectionName,
+		"count": len(queryResult),
+	})
+	return
 }

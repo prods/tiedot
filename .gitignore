@@ -9,3 +9,4 @@ tiedot*.exe
 # Persistent Sample and test databases
 test_db
 sample_db
+jwt
