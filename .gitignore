@@ -10,3 +10,4 @@ tiedot*.exe
 test_db
 sample_db
 jwt
+number_of_partitions
