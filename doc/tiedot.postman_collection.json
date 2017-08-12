@@ -1,0 +1,1351 @@
+{
+	"variables": [],
+	"info": {
+		"name": "tiedot",
+		"_postman_id": "2244e1b7-d723-76ff-b19e-5646719aef05",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "v1",
+			"description": "",
+			"item": [
+				{
+					"name": "Get all Collections",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collections",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Gets all Collections"
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Collection",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test2",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Gets all Collections"
+					},
+					"response": []
+				},
+				{
+					"name": "Rename Collection",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test5",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"new_name\" : \"testX\"\n}"
+						},
+						"description": "Renames Collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Collection",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test5",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Deletes Collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Scrub Collection",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/scrub",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Truncates Collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Sync Database",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/sync",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Sync (Clean up)"
+					},
+					"response": []
+				},
+				{
+					"name": "Query Collection (all)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/query",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"eq\": true, \n\t\"in\": [\"enabled\"]\n}"
+						},
+						"description": "Queries Collection (all)"
+					},
+					"response": []
+				},
+				{
+					"name": "Count Query Collection (all)",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/query/count",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"eq\": true, \n\t\"in\": [\"enabled\"]\n}"
+						},
+						"description": "Queries Collection and return count (all)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Document",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/doc",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Eugene\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Creates a new document"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Document",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/doc/7498116635787055383",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Herman\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Updates Existing Document"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Document",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/doc/7498116635787055383",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Herman\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get Existing Document"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/doc/4741009355643316814",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Herman\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Delete Document"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Paged Result",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/page/3/of/3",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Leonardo\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get Paged Result"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Approximated document count",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/docs/count",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Eugene\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get Approximate document count."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Indexes on a Collection",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/indexes",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Eugene\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get all Collection Indexes"
+					},
+					"response": []
+				},
+				{
+					"name": "Create an Index",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/index",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"path\": [\"name\"]\n}"
+						},
+						"description": "Create an Index in a collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete an Index",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/index",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"path\": [\"name\"]\n}"
+						},
+						"description": "Delete an index"
+					},
+					"response": []
+				},
+				{
+					"name": "Dump",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/dump",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"destination\": \"sample_dump\"\n}"
+						},
+						"description": "Dump All data"
+					},
+					"response": []
+				},
+				{
+					"name": "Memstats",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/memstats",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Version",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/version",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "JWT Get Authorization Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (responseCode.code === 200) {",
+									"    postman.setGlobalVariable(\"JWT_AUTH_TOKEN_STRING\", postman.getResponseHeader(\"Authorization\"));",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/getjwt",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "user",
+									"value": "{{JWT_USER}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "pass",
+									"value": "{{JWT_PASSWORD}}",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "JWT Check Token",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/checkjwt",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get All documents",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/collection/test1/docs",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"eq\": false, \"in\" : [\"Enabled\"] \n}"
+						},
+						"description": "Queries Collection (all)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "legacy",
+			"description": "",
+			"item": [
+				{
+					"name": "Get all Collections",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/all",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Gets all Collections"
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Collection",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/create?col=test1",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"create"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Gets all Collections"
+					},
+					"response": []
+				},
+				{
+					"name": "Rename Collection",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/rename?old=test3&new=test2",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"rename"
+							],
+							"query": [
+								{
+									"key": "old",
+									"value": "test3",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "new",
+									"value": "test2",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Renames Collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Collection",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/drop?col=test2",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"drop"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test2",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Deletes Collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Scrub Collection",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/scrub?col=test1",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"scrub"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Truncates Collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Sync Database",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/sync",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Sync (Clean up)"
+					},
+					"response": []
+				},
+				{
+					"name": "Query Collection (all)",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/query?col=test1;q={\"c\":[\"all\"]}",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"query"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1;q={\"c\":[\"all\"]}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"c\" : [ \"all\" ]\n}"
+						},
+						"description": "Queries Collection (all)"
+					},
+					"response": []
+				},
+				{
+					"name": "Count Query Collection (all)",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/count?col=test1;q={\"c\":[\"all\"]}",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"count"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1;q={\"c\":[\"all\"]}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"c\" : [ \"all\" ]\n}"
+						},
+						"description": "Queries Collection and return count (all)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Document",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/insert?col=test1&doc={ \"name\":\"Albert\", \"enabled\": true}",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"insert"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "doc",
+									"value": "{ \"name\":\"Albert\", \"enabled\": true}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Eugene\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Creates a new document"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Document",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/update?col=test1&id=4718561513470050247&doc={ \"name\":\"Albert\", \"enabled\": false}",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"update"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "id",
+									"value": "4718561513470050247",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "doc",
+									"value": "{ \"name\":\"Albert\", \"enabled\": false}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Herman\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Updates Existing Document"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Document",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/get?col=test1&id=4718561513470050247",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"get"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "id",
+									"value": "4718561513470050247",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Herman\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get Existing Document"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/delete?col=test1&id=4718561513470050247",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"delete"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "id",
+									"value": "4718561513470050247",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Herman\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Delete Document"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Paged Result",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/getpage?col=test1&page=1&total=2",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"getpage"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "total",
+									"value": "2",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Leonardo\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get Paged Result"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Approximated document count",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/approxdoccount?col=test1",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"approxdoccount"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Eugene\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get Approximate document count."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Indexes on a Collection",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/indexes?col=test1",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"indexes"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Eugene\",\n\t\"enabled\": false\n}"
+						},
+						"description": "Get all Collection Indexes"
+					},
+					"response": []
+				},
+				{
+					"name": "Create an Index",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/index?col=test1&path=name",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"index"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "path",
+									"value": "name",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"path\": \"name\"\n}"
+						},
+						"description": "Create an Index in a collection"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete an Index",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/unindex?col=test1&path=name",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"unindex"
+							],
+							"query": [
+								{
+									"key": "col",
+									"value": "test1",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "path",
+									"value": "name",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"path\": \"name\"\n}"
+						},
+						"description": "Delete an index"
+					},
+					"response": []
+				},
+				{
+					"name": "Dump",
+					"request": {
+						"url": {
+							"raw": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/dump?dest=sample_dump",
+							"protocol": "{{PROTOCOL}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"dump"
+							],
+							"query": [
+								{
+									"key": "dest",
+									"value": "sample_dump",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"path\": \"name\"\n}"
+						},
+						"description": "Dump All data"
+					},
+					"response": []
+				},
+				{
+					"name": "Shutdown",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/shutdown",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "JWT Get Authorization Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (responseCode.code === 200) {",
+									"    postman.setGlobalVariable(\"JWT_AUTH_TOKEN_STRING\", postman.getResponseHeader(\"Authorization\"));",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/getjwt",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "user",
+									"value": "{{JWT_USER}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "pass",
+									"value": "{{JWT_PASSWORD}}",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Version",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/version",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Memstats",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/memstats",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "JWT Check Token",
+					"request": {
+						"url": "{{PROTOCOL}}://{{HOST}}:{{PORT}}/checkjwt",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{JWT_AUTH_TOKEN_STRING}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
